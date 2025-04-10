@@ -11,7 +11,7 @@ class LMMEngine:
 
 
 class LMMEngineOpenAI(LMMEngine):
-    def __init__(self, api_key=None, model=None, rate_limit=-1, **kwargs):
+    def __init__(self, api_key=None, model=None, rate_limit=-1, base_url=None, **kwargs):
         assert model is not None, "model must be provided"
         self.model = model
 
@@ -24,7 +24,7 @@ class LMMEngineOpenAI(LMMEngine):
         self.api_key = api_key
         self.request_interval = 0 if rate_limit == -1 else 60.0 / rate_limit
 
-        self.llm_client = OpenAI(api_key=self.api_key)
+        self.llm_client = OpenAI(api_key=self.api_key, base_url=base_url) if base_url else OpenAI(api_key=self.api_key)
 
     @backoff.on_exception(
         backoff.expo, (APIConnectionError, APIError, RateLimitError), max_time=60
@@ -35,7 +35,7 @@ class LMMEngineOpenAI(LMMEngine):
             self.llm_client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                max_tokens=max_new_tokens if max_new_tokens else 4096,
+                max_tokens=max_new_tokens if max_new_tokens else 8192,
                 temperature=temperature,
                 **kwargs,
             )
